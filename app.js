@@ -71,6 +71,28 @@ const httpRequestListener = function (request, response) {
         response.end(JSON.stringify({ message: 'postCreated', posts: posts }));
       });
     }
+  } else if (method === 'GET') {
+    if (url === '/postlist') {
+      const postList = posts.map((data) => {
+        for (let i = 0; i < users.length; i++) {
+          if (data.userId === users[i].id) {
+            const userNameFound = users[i].name;
+            //return userNameFound;
+            const newElement = {
+              userID: data.userId,
+              userName: userNameFound,
+              postingId: data.id,
+              postingTitle: data.title,
+              postingContent: data.content,
+            };
+
+            return newElement;
+          }
+        }
+      });
+      response.writeHead(200, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ data: postList }));
+    }
   }
 };
 
