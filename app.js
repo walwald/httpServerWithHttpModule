@@ -32,6 +32,27 @@ const posts = [
   },
 ];
 
+function makePostList() {
+  const postList = posts.map((data) => {
+    for (let i = 0; i < users.length; i++) {
+      if (data.userId === users[i].id) {
+        const userNameFound = users[i].name;
+        //return userNameFound;
+        const newElement = {
+          userID: data.userId,
+          userName: userNameFound,
+          postingId: data.id,
+          postingTitle: data.title,
+          postingContent: data.content,
+        };
+
+        return newElement;
+      }
+    }
+  });
+  return postList;
+}
+
 //응답 function
 const httpRequestListener = function (request, response) {
   const { url, method } = request;
@@ -73,25 +94,31 @@ const httpRequestListener = function (request, response) {
     }
   } else if (method === 'GET') {
     if (url === '/postlist') {
-      const postList = posts.map((data) => {
-        for (let i = 0; i < users.length; i++) {
-          if (data.userId === users[i].id) {
-            const userNameFound = users[i].name;
-            //return userNameFound;
-            const newElement = {
-              userID: data.userId,
-              userName: userNameFound,
-              postingId: data.id,
-              postingTitle: data.title,
-              postingContent: data.content,
-            };
-
-            return newElement;
-          }
-        }
-      });
+      const postList = makePostList();
       response.writeHead(200, { 'Content-Type': 'application/json' });
       response.end(JSON.stringify({ data: postList }));
+    }
+  } else if (method === 'PATCH') {
+    if (url === '/update') {
+      let body = '';
+      request.on('data', (data) => {
+        body += data;
+      });
+      request.on('end', () => {
+        const post = JSON.parse(body);
+        //업데이트 요청된 post의 id를 참조하여 array의 index 도출하고 array.index 값 업데이트
+        posts.forEach((eachPost, index) => {
+          if (eachPost.id === post.id) {
+            eachPost.content = post.content;
+            const postList = makePostList();
+            const updatedPost = postList[index];
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            //postList 배열에서 update한 객체만 찾아서 응답하기
+            response.end(JSON.stringify({ data: updatedPost }));
+            return;
+          }
+        });
+      });
     }
   }
 };
