@@ -30,6 +30,13 @@ const posts = [
     content: 'Request/Response와 Stateless!!',
     userId: 2,
   },
+  {
+    id: 3,
+    title: '간단한 HTTP API 개발 시작!2',
+    content:
+      'Node.js에 내장되어 있는 http 모듈을 사용해서 HTTP server를 구현.2',
+    userId: 1,
+  },
 ];
 
 function makePostList() {
@@ -102,6 +109,39 @@ const httpRequestListener = function (request, response) {
       const postList = makePostList();
       response.writeHead(200, { 'Content-Type': 'application/json' });
       response.end(JSON.stringify({ data: postList }));
+    } else if (url === '/users') {
+      let body = '';
+      request.on('data', (data) => {
+        body += data;
+      });
+      request.on('end', () => {
+        const user = JSON.parse(body);
+        users.forEach((eachUser, index) => {
+          if (eachUser.id === user.id) {
+            //해당 유저에 대한 obj 만드는 함수 실행하기
+            //userId에 해당하는 posting들 찾기
+            const userPosting = [];
+            posts.forEach((eachPost, index) => {
+              if (eachPost.userId === eachUser.id) {
+                userPosting.push({
+                  postingId: eachPost.id,
+                  postingName: eachPost.title,
+                  postingContent: eachPost.content,
+                });
+              }
+            });
+
+            const userObj = {
+              userID: eachUser.id,
+              userName: eachUser.name,
+              postings: userPosting,
+            };
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            //postList 배열에서 update한 객체만 찾아서 응답하기
+            response.end(JSON.stringify({ data: userObj }));
+          }
+        });
+      });
     }
   } else if (method === 'PATCH') {
     if (url === '/update') {
