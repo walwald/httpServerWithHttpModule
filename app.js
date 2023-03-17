@@ -71,7 +71,8 @@ const httpRequestListener = function (request, response) {
           password: user.password,
         });
 
-        response.writeHead(200, { 'Content-Type': 'application/json' });
+        //created의 상태 코드는 201
+        response.writeHead(201, { 'Content-Type': 'application/json' });
         response.end(JSON.stringify({ message: 'userCreated', users: users }));
       });
     } else if (url === '/posts') {
@@ -93,7 +94,11 @@ const httpRequestListener = function (request, response) {
       });
     }
   } else if (method === 'GET') {
-    if (url === '/postlist') {
+    /*같은 posts 요청이고 method가 다르니까 같은 url 반복해도 됨*/
+    if (url === '/ping') {
+      response.writeHead(200, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ message: 'pong' }));
+    } else if (url === '/posts') {
       const postList = makePostList();
       response.writeHead(200, { 'Content-Type': 'application/json' });
       response.end(JSON.stringify({ data: postList }));
@@ -118,6 +123,25 @@ const httpRequestListener = function (request, response) {
             return;
           }
         });
+      });
+    }
+  } else if (method === 'DELETE') {
+    if (url === '/posts') {
+      let body = '';
+      request.on('data', (data) => {
+        body += data;
+      });
+      request.on('end', () => {
+        const post = JSON.parse(body);
+        posts.forEach((eachPost, index) => {
+          if (eachPost.id === post.id) {
+            posts.splice(index, 1);
+          }
+        });
+        response.writeHead(200, { 'Content-Type': 'application/json' });
+        //postList 배열에서 update한 객체만 찾아서 응답하기
+        response.end(JSON.stringify({ message: 'postingDeleted' }));
+        console.log(posts);
       });
     }
   }
